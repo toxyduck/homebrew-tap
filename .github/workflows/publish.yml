@@ -1,0 +1,77 @@
+name: Publish Formula
+
+on:
+  repository_dispatch:
+    types: [feuilleton-release]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Existing Feuilleton release version
+        required: true
+        type: string
+
+concurrency:
+  group: publish-formula
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+env:
+  VERSION: ${{ github.event.client_payload.version || inputs.version }}
+  SOURCE_REPOSITORY: ${{ github.event.client_payload.repository || 'toxyduck/feuilleton' }}
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Download release checksums
+        run: curl --fail --location --silent --show-error "https://github.com/$SOURCE_REPOSITORY/releases/download/v$VERSION/SHA256SUMS" --output SHA256SUMS
+      - name: Render Formula
+        run: scripts/render-formula.sh "$VERSION" "$SOURCE_REPOSITORY" SHA256SUMS Formula/feuilleton.rb
+      - uses: actions/upload-artifact@v4
+        with:
+          name: formula
+          path: Formula/feuilleton.rb
+
+  test:
+    needs: prepare
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v4
+        with:
+          name: formula
+          path: Formula
+      - uses: Homebrew/actions/setup-homebrew@100978dc923ea73ee9ed454d1d5c4fcf3ee14a9e
+      - name: Install from local tap
+        run: |
+          tap_dir="$(brew --repository)/Library/Taps/toxyduck/homebrew-tap"
+          mkdir -p "$(dirname "$tap_dir")"
+          rm -rf "$tap_dir"
+          ln -s "$GITHUB_WORKSPACE" "$tap_dir"
+          HOMEBREW_NO_AUTO_UPDATE=1 brew install toxyduck/tap/feuilleton
+          ftn --version
+          brew uninstall feuilleton
+
+  publish:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v4
+        with:
+          name: formula
+          path: Formula
+      - name: Commit Formula
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add Formula/feuilleton.rb
+          git diff --cached --quiet && exit 0
+          git commit -m "feuilleton $VERSION"
+          git push
