@@ -35,32 +35,8 @@ jobs:
           name: formula
           path: Formula/feuilleton.rb
 
-  test:
-    needs: prepare
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/download-artifact@v4
-        with:
-          name: formula
-          path: .
-      - name: Place Formula in tap
-        run: |
-          mkdir -p Formula
-          mv feuilleton.rb Formula/feuilleton.rb
-      - uses: Homebrew/actions/setup-homebrew@100978dc923ea73ee9ed454d1d5c4fcf3ee14a9e
-      - name: Install generated Formula
-        run: |
-          test -f Formula/feuilleton.rb
-          HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_FROM_API=1 brew install --verbose toxyduck/tap/feuilleton
-          ftn --version
-          brew uninstall feuilleton
-
   publish:
-    needs: test
+    needs: prepare
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -78,3 +54,21 @@ jobs:
           git diff --cached --quiet && exit 0
           git commit -m "feuilleton $VERSION"
           git push
+
+  test:
+    needs: publish
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+      - uses: Homebrew/actions/setup-homebrew@100978dc923ea73ee9ed454d1d5c4fcf3ee14a9e
+      - name: Install published Formula
+        run: |
+          test -f Formula/feuilleton.rb
+          HOMEBREW_NO_AUTO_UPDATE=1 brew install toxyduck/tap/feuilleton
+          ftn --version
+          brew uninstall feuilleton
