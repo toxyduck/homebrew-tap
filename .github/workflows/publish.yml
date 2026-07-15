@@ -48,13 +48,10 @@ jobs:
           name: formula
           path: Formula
       - uses: Homebrew/actions/setup-homebrew@100978dc923ea73ee9ed454d1d5c4fcf3ee14a9e
-      - name: Install from local tap
+      - name: Install generated Formula
         run: |
-          tap_dir="$(brew --repository)/Library/Taps/toxyduck/homebrew-tap"
-          mkdir -p "$(dirname "$tap_dir")"
-          rm -rf "$tap_dir"
-          ln -s "$GITHUB_WORKSPACE" "$tap_dir"
-          HOMEBREW_NO_AUTO_UPDATE=1 brew install toxyduck/tap/feuilleton
+          test -f "$GITHUB_WORKSPACE/Formula/feuilleton.rb"
+          HOMEBREW_NO_AUTO_UPDATE=1 brew install --formula "$GITHUB_WORKSPACE/Formula/feuilleton.rb"
           ftn --version
           brew uninstall feuilleton
 
