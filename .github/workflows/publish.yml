@@ -50,8 +50,8 @@ jobs:
       - uses: Homebrew/actions/setup-homebrew@100978dc923ea73ee9ed454d1d5c4fcf3ee14a9e
       - name: Install generated Formula
         run: |
-          test -f "$GITHUB_WORKSPACE/Formula/feuilleton.rb"
-          HOMEBREW_NO_AUTO_UPDATE=1 brew install --formula "$GITHUB_WORKSPACE/Formula/feuilleton.rb"
+          test -f "/feuilleton.rb"
+          HOMEBREW_NO_AUTO_UPDATE=1 brew install --formula "/feuilleton.rb"
           ftn --version
           brew uninstall feuilleton
 
