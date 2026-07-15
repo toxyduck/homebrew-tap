@@ -33,7 +33,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: formula
-          path: Formula/feuilleton.rb
+          path: ./feuilleton.rb
 
   test:
     needs: prepare
@@ -46,7 +46,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: formula
-          path: Formula
+          path: .
       - uses: Homebrew/actions/setup-homebrew@100978dc923ea73ee9ed454d1d5c4fcf3ee14a9e
       - name: Install generated Formula
         run: |
@@ -63,7 +63,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: formula
-          path: Formula
+          path: .
       - name: Commit Formula
         run: |
           git config user.name github-actions[bot]
