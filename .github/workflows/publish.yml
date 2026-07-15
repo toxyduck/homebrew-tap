@@ -55,7 +55,7 @@ jobs:
       - name: Install generated Formula
         run: |
           test -f Formula/feuilleton.rb
-          HOMEBREW_NO_AUTO_UPDATE=1 brew install toxyduck/tap/feuilleton
+          HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_FROM_API=1 brew install --verbose toxyduck/tap/feuilleton
           ftn --version
           brew uninstall feuilleton
 
