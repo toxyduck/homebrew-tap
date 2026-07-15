@@ -33,7 +33,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: formula
-          path: ./feuilleton.rb
+          path: Formula/feuilleton.rb
 
   test:
     needs: prepare
